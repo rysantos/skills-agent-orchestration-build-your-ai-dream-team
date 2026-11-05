@@ -1,0 +1,750 @@
+/* ==========================================================================
+   Project Pulse — dashboard styles
+   Owner: Designer (plan §3). Styles only the class contract in plan §2.2.
+   Plain CSS, no external fonts or imports.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Design tokens (light theme default)
+   Contrast notes (WCAG AA): every text/background pair below is >= 4.5:1.
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Surfaces & text */
+  --color-page: #f3f5fa;
+  --color-page-accent: #e7ecf7;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f7f8fb;
+  --color-border: #dde2ec;
+  --color-text: #172033;          /* 15.9:1 on white */
+  --color-text-muted: #4a5568;    /*  7.5:1 on white */
+  --color-brand: #3b3fc4;         /*  7.3:1 on white */
+  --color-focus: #1f5fd6;
+
+  /* Status badges: [background, text] — text is the signal, color reinforces */
+  --status-on-track-bg: #e2f5e9;
+  --status-on-track-fg: #11643a;   /* 6.6:1 */
+  --status-at-risk-bg: #fff3d6;
+  --status-at-risk-fg: #874600;    /* 6.4:1 */
+  --status-blocked-bg: #fde6e8;
+  --status-blocked-fg: #a8162a;    /* 6.2:1 */
+  --status-completed-bg: #e5edfd;
+  --status-completed-fg: #1d47b8;  /* 6.9:1 */
+  --status-unknown-bg: #eceff4;
+  --status-unknown-fg: #3d4757;    /* 8.6:1 */
+
+  /* Progress bar fills (>= 3:1 against the track, UI component contrast) */
+  --progress-track: #e3e7ef;
+  --progress-on-track: #198049;
+  --progress-at-risk: #b45f06;
+  --progress-blocked: #c4223a;
+  --progress-completed: #2557d6;
+  --progress-unknown: #5b6577;
+
+  /* Priority treatment */
+  --priority-high-accent: #c2410c;     /* card left border */
+  --priority-high-badge-bg: #b3330a;
+  --priority-high-badge-fg: #ffffff;   /* 6.1:1 */
+  --priority-medium-accent: #e2a256;
+  --priority-medium-badge-bg: #fff4e5;
+  --priority-medium-badge-fg: #8a4300; /* 6.9:1 */
+  --priority-medium-badge-border: #f0c48d;
+  --priority-low-accent: #c9d1de;
+  --priority-low-badge-bg: #f1f3f7;
+  --priority-low-badge-fg: #4a5568;    /* 6.9:1 */
+  --priority-unknown-accent: #d7dce5;
+  --priority-unknown-badge-fg: #4a5568;
+
+  /* Messages */
+  --message-bg: #ffffff;
+  --message-fg: #172033;
+  --message-border: #dde2ec;
+  --message-error-bg: #fdecee;
+  --message-error-fg: #8f1324;         /* 8.1:1 */
+  --message-error-border: #e8a0aa;
+  --message-empty-bg: #f0f3fb;
+  --message-empty-fg: #2e3a52;
+
+  /* Shape & depth */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.06), 0 4px 12px rgb(16 24 40 / 0.06);
+  --shadow-card-hover: 0 2px 4px rgb(16 24 40 / 0.08), 0 12px 28px rgb(16 24 40 / 0.12);
+  --shadow-header: 0 1px 2px rgb(16 24 40 / 0.04), 0 8px 24px rgb(59 63 196 / 0.08);
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  --transition: 160ms ease;
+}
+
+/* Optional dark theme — same tokens, re-tuned so every pair still passes AA. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-page: #0e1320;
+    --color-page-accent: #151c33;
+    --color-surface: #18203a;
+    --color-surface-subtle: #1d2643;
+    --color-border: #2c3654;
+    --color-text: #e8ecf5;          /* 13.9:1 on surface */
+    --color-text-muted: #aab4c8;    /*  7.6:1 on surface */
+    --color-brand: #a9adff;         /*  7.4:1 on surface */
+    --color-focus: #8fb4ff;
+
+    --status-on-track-bg: #10392a;
+    --status-on-track-fg: #93e7b5;
+    --status-at-risk-bg: #3f2c08;
+    --status-at-risk-fg: #ffd27d;
+    --status-blocked-bg: #4a1520;
+    --status-blocked-fg: #ffb4bf;
+    --status-completed-bg: #172c5c;
+    --status-completed-fg: #b0c8ff;
+    --status-unknown-bg: #2a3350;
+    --status-unknown-fg: #d3d9e6;
+
+    --progress-track: #2c3654;
+    --progress-on-track: #4fcf86;
+    --progress-at-risk: #f2b43c;
+    --progress-blocked: #ff7a8c;
+    --progress-completed: #7ea2ff;
+    --progress-unknown: #9aa4b8;
+
+    --priority-high-accent: #ff8a4c;
+    --priority-high-badge-bg: #ff9a66;
+    --priority-high-badge-fg: #2a0e00;   /* 8.9:1 */
+    --priority-medium-accent: #b57a35;
+    --priority-medium-badge-bg: #33240f;
+    --priority-medium-badge-fg: #ffcf94;
+    --priority-medium-badge-border: #6b4a1f;
+    --priority-low-accent: #3a4566;
+    --priority-low-badge-bg: #232c47;
+    --priority-low-badge-fg: #c3cbdb;
+    --priority-unknown-accent: #3a4566;
+    --priority-unknown-badge-fg: #c3cbdb;
+
+    --message-bg: #18203a;
+    --message-fg: #e8ecf5;
+    --message-border: #2c3654;
+    --message-error-bg: #3f1520;
+    --message-error-fg: #ffc2cb;
+    --message-error-border: #7a2a3a;
+    --message-empty-bg: #1b2546;
+    --message-empty-fg: #d3d9e6;
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 12px rgb(0 0 0 / 0.3);
+    --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.45), 0 12px 28px rgb(0 0 0 / 0.45);
+    --shadow-header: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Base
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  background-color: var(--color-page);
+  background-image: radial-gradient(
+    120% 60% at 50% 0%,
+    var(--color-page-accent) 0%,
+    var(--color-page) 60%
+  );
+  background-repeat: no-repeat;
+  overflow-x: hidden; /* safety net: no horizontal scroll at 320px */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The `hidden` attribute must always win over component `display` rules.
+   index.html toggles `hidden` on .dashboard__meta and .dashboard__message. */
+[hidden] {
+  display: none !important;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* --------------------------------------------------------------------------
+   3. Dashboard shell
+   -------------------------------------------------------------------------- */
+.dashboard {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+.dashboard__header {
+  position: relative;
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-header);
+  overflow: hidden;
+}
+
+/* Decorative brand stripe across the top of the header */
+.dashboard__header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-brand), var(--progress-completed), var(--progress-on-track));
+}
+
+.dashboard__title {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.3rem + 2vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+/* Small "pulse" mark before the title (decorative, no text) */
+.dashboard__title::before {
+  content: "";
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  margin-right: 0.4em;
+  vertical-align: 0.12em;
+  border-radius: 50%;
+  background: var(--color-brand);
+  box-shadow: 0 0 0 0.18em color-mix(in srgb, var(--color-brand) 22%, transparent);
+}
+
+.dashboard__subtitle {
+  margin: var(--space-2) 0 0;
+  max-width: 60ch;
+  font-size: 1.0625rem;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* inline-block (not flex): the meta line mixes text nodes and <time>,
+   and flex `gap` would add stray spacing between them. */
+.dashboard__meta {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  margin: var(--space-3) 0 0;
+  padding: var(--space-1) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+}
+
+.dashboard__meta time {
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+/* --------------------------------------------------------------------------
+   4. State messages: loading (default), error, empty
+   -------------------------------------------------------------------------- */
+.dashboard__message {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  font-weight: 500;
+  color: var(--message-fg);
+  background: var(--message-bg);
+  border: 1px solid var(--message-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow-wrap: anywhere;
+}
+
+/* Covered by the global [hidden] rule; kept as an explicit, targeted guard. */
+.dashboard__message[hidden] {
+  display: none;
+}
+
+/* Loading indicator (plain message, no modifier) */
+.dashboard__message:not(.dashboard__message--error):not(.dashboard__message--empty)::before {
+  content: "";
+  flex: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.15em;
+  border: 2px solid var(--progress-track);
+  border-top-color: var(--color-brand);
+  border-radius: 50%;
+  animation: pulse-spin 0.8s linear infinite;
+}
+
+.dashboard__message--error {
+  color: var(--message-error-fg);
+  background: var(--message-error-bg);
+  border-color: var(--message-error-border);
+  border-left: 5px solid var(--message-error-fg);
+}
+
+.dashboard__message--error::before {
+  content: "!";
+  content: "!" / "";
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  font-weight: 800;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: var(--message-error-bg);
+  background: var(--message-error-fg);
+  border-radius: 50%;
+}
+
+.dashboard__message--empty {
+  justify-content: center;
+  padding-block: var(--space-6);
+  text-align: center;
+  color: var(--message-empty-fg);
+  background: var(--message-empty-bg);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+@keyframes pulse-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Responsive grid
+   -------------------------------------------------------------------------- */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-grid__item {
+  display: flex; /* equal-height cards per row */
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.project-grid__item::marker {
+  content: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. Project card
+   Order: name + status → summary → details → progress → activity
+   -------------------------------------------------------------------------- */
+.project-card {
+  --card-accent: var(--priority-unknown-accent);
+  --progress-color: var(--progress-unknown);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-5);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 6px solid var(--card-accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.project-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+/* If anything inside a card receives keyboard focus, make the card obvious */
+.project-card:focus-within {
+  box-shadow: var(--shadow-card-hover), 0 0 0 3px var(--color-focus);
+}
+
+/* Status → progress bar color */
+.project-card--status-on-track  { --progress-color: var(--progress-on-track); }
+.project-card--status-at-risk   { --progress-color: var(--progress-at-risk); }
+.project-card--status-blocked   { --progress-color: var(--progress-blocked); }
+.project-card--status-completed { --progress-color: var(--progress-completed); }
+.project-card--status-unknown   { --progress-color: var(--progress-unknown); }
+
+/* Priority → left accent border (high is loud, medium/low progressively quieter) */
+.project-card--priority-high {
+  --card-accent: var(--priority-high-accent);
+  border-left-width: 8px;
+}
+.project-card--priority-medium  { --card-accent: var(--priority-medium-accent); }
+.project-card--priority-low     { --card-accent: var(--priority-low-accent); }
+.project-card--priority-unknown {
+  --card-accent: var(--priority-unknown-accent);
+  border-left-style: dashed;
+}
+
+.project-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.project-card__name {
+  flex: 1 1 10rem;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.project-card__summary {
+  margin: 0;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Details: Owner / Priority / Due as compact labeled cells */
+.project-card__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
+  gap: var(--space-3);
+  margin: var(--space-1) 0 0;
+  padding: var(--space-3);
+  background: var(--color-surface-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.project-card__detail {
+  min-width: 0;
+}
+
+.project-card__detail dt {
+  margin: 0 0 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.project-card__detail dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.project-card__owner,
+.project-card__due {
+  overflow-wrap: anywhere;
+}
+
+/* Class-only selector so it applies to both <time> (valid date) and
+   <span> (no due date / invalid raw value) emitted by index.html. */
+.project-card__due {
+  display: inline;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Non-date fallback ("No due date" or raw invalid text): quieter */
+span.project-card__due {
+  font-weight: 500;
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+
+/* Recent activity — pinned to the bottom of the card */
+.project-card__activity {
+  margin: auto 0 0;
+  padding-top: var(--space-3);
+  font-size: 0.9375rem;
+  color: var(--color-text);
+  border-top: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+
+.project-card__label {
+  display: block;
+  margin-bottom: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   7. Status badges (text always present; color + dot reinforce it)
+   -------------------------------------------------------------------------- */
+.status-badge {
+  --badge-bg: var(--status-unknown-bg);
+  --badge-fg: var(--status-unknown-fg);
+
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.4em;
+  max-width: 100%;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--badge-fg);
+  background: var(--badge-bg);
+  border: 1px solid color-mix(in srgb, var(--badge-fg) 28%, transparent);
+  border-radius: var(--radius-pill);
+}
+
+.status-badge::before {
+  content: "";
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-badge--on-track {
+  --badge-bg: var(--status-on-track-bg);
+  --badge-fg: var(--status-on-track-fg);
+}
+
+.status-badge--at-risk {
+  --badge-bg: var(--status-at-risk-bg);
+  --badge-fg: var(--status-at-risk-fg);
+}
+
+/* Blocked uses a square marker so it differs by shape, not only hue */
+.status-badge--blocked {
+  --badge-bg: var(--status-blocked-bg);
+  --badge-fg: var(--status-blocked-fg);
+}
+.status-badge--blocked::before {
+  border-radius: 1px;
+}
+
+.status-badge--completed {
+  --badge-bg: var(--status-completed-bg);
+  --badge-fg: var(--status-completed-fg);
+}
+
+.status-badge--unknown {
+  --badge-bg: var(--status-unknown-bg);
+  --badge-fg: var(--status-unknown-fg);
+  border-style: dashed;
+}
+.status-badge--unknown::before {
+  background: transparent;
+  border: 1.5px solid currentColor;
+}
+
+/* Unknown values may echo arbitrary text — allow wrapping */
+.status-badge--unknown {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   8. Priority badges
+   -------------------------------------------------------------------------- */
+.priority-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.125rem 0.55rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--priority-low-badge-fg);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-wrap: anywhere;
+}
+
+.priority-badge--high {
+  color: var(--priority-high-badge-fg);
+  background: var(--priority-high-badge-bg);
+  border-color: var(--priority-high-badge-bg);
+}
+
+.priority-badge--medium {
+  color: var(--priority-medium-badge-fg);
+  background: var(--priority-medium-badge-bg);
+  border-color: var(--priority-medium-badge-border);
+}
+
+.priority-badge--low {
+  font-weight: 600;
+  color: var(--priority-low-badge-fg);
+  background: var(--priority-low-badge-bg);
+  border-color: var(--priority-low-badge-bg);
+}
+
+.priority-badge--unknown {
+  font-weight: 600;
+  color: var(--priority-unknown-badge-fg);
+  background: transparent;
+  border-style: dashed;
+}
+
+/* --------------------------------------------------------------------------
+   9. Progress
+   -------------------------------------------------------------------------- */
+.progress {
+  position: relative;
+  height: 0.625rem;
+  margin-top: var(--space-1);
+  overflow: hidden;
+  background: var(--progress-track);
+  border-radius: var(--radius-pill);
+}
+
+.progress__bar {
+  display: block;
+  width: var(--progress, 0%);
+  max-width: 100%;
+  height: 100%;
+  background: var(--progress-color, var(--progress-unknown));
+  border-radius: inherit;
+  transition: width 400ms ease;
+}
+
+.progress__label {
+  margin: calc(var(--space-1) * -1) 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive refinements
+   -------------------------------------------------------------------------- */
+@media (min-width: 48rem) {
+  .dashboard {
+    padding: var(--space-6) var(--space-5) 3rem;
+  }
+
+  .dashboard__header {
+    padding: var(--space-6);
+  }
+}
+
+@media (max-width: 30rem) {
+  .dashboard {
+    padding: var(--space-4) var(--space-3) var(--space-5);
+  }
+
+  .dashboard__header {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+  }
+
+  .project-grid {
+    gap: var(--space-4);
+  }
+
+  .project-card {
+    padding: var(--space-4);
+  }
+
+  .dashboard__message {
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Accessibility preferences
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .project-card,
+  .progress__bar {
+    transition: none;
+  }
+
+  .project-card:hover {
+    transform: none;
+  }
+}
+
+/* Windows High Contrast / forced colors: keep structure visible */
+@media (forced-colors: active) {
+  .project-card,
+  .dashboard__header,
+  .dashboard__message,
+  .status-badge,
+  .priority-badge,
+  .progress {
+    border: 1px solid CanvasText;
+  }
+
+  .project-card--priority-high {
+    border-left: 8px solid CanvasText;
+  }
+
+  .progress__bar {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

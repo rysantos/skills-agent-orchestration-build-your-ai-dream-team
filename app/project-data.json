@@ -1,0 +1,68 @@
+{
+  "lastUpdated": "2026-11-05",
+  "projects": [
+    {
+      "id": "pulse-api",
+      "name": "Pulse API",
+      "owner": "Mona",
+      "status": "on-track",
+      "priority": "high",
+      "recentActivity": "Merged pagination support for the projects endpoint.",
+      "summary": "Backend service that powers the dashboard and exposes project health data to other tools.",
+      "progress": 72,
+      "dueDate": "2026-12-15"
+    },
+    {
+      "id": "docs-refresh",
+      "name": "Contributor Docs Refresh",
+      "owner": "Hubot",
+      "status": "at-risk",
+      "priority": "medium",
+      "recentActivity": "Two reviewers are out this week, so the getting-started guide review slipped.",
+      "summary": "Rewrite the onboarding guide so new contributors can open their first pull request in under an hour.",
+      "progress": 45,
+      "dueDate": "2026-11-28"
+    },
+    {
+      "id": "ci-migration",
+      "name": "CI Pipeline Migration",
+      "owner": "Platform Team",
+      "status": "blocked",
+      "priority": "high",
+      "recentActivity": "Waiting on security approval for the new self-hosted runner images.",
+      "summary": "Move the remaining build jobs to GitHub Actions and retire the legacy CI server.",
+      "progress": 30,
+      "dueDate": "2026-12-01"
+    },
+    {
+      "id": "design-system",
+      "name": "Design System Tokens",
+      "owner": "Octocat",
+      "status": "completed",
+      "priority": "low",
+      "recentActivity": "Published v1.0 of the color and spacing tokens to the internal package registry.",
+      "summary": "Shared color, spacing and typography tokens used by every team-facing app.",
+      "progress": 100,
+      "dueDate": "2026-10-20"
+    },
+    {
+      "id": "accessibility-audit",
+      "name": "Accessibility Audit and Remediation for the Contributor Portal, Issue Templates and Community Health Files",
+      "owner": "Accessibility Working Group (Mona, Hubot and volunteers from the community)",
+      "status": "on-track",
+      "priority": "medium",
+      "recentActivity": "Finished keyboard-navigation testing across all twelve portal pages, filed eighteen issues covering focus order, missing labels and low-contrast badges, and paired with the design team to agree on fixes for the three most severe findings before the next release candidate.",
+      "summary": "Audit the contributor portal against WCAG 2.2 AA and fix the highest-impact issues first.",
+      "progress": 58,
+      "dueDate": "2027-01-31"
+    },
+    {
+      "id": "community-office-hours",
+      "name": "Community Office Hours",
+      "owner": "Developer Relations",
+      "status": "on-track",
+      "priority": "low",
+      "recentActivity": "Collected topic suggestions from the discussion board for the next session."
+    }
+  ]
+}

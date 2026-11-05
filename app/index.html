@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Project Pulse</title>
+    <meta name="description" content="Project Pulse: a quick view of each project's owner, status, priority and recent activity.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="dashboard" aria-labelledby="dashboard-title">
+      <header class="dashboard__header">
+        <h1 id="dashboard-title" class="dashboard__title">Project Pulse</h1>
+        <p class="dashboard__subtitle">Who owns what, how each project is doing, and what changed recently.</p>
+        <p class="dashboard__meta" id="dashboard-meta" hidden></p>
+      </header>
+
+      <p class="dashboard__message" id="dashboard-message" role="status" aria-live="polite">Loading projects…</p>
+
+      <ul class="project-grid" id="project-grid" aria-label="Projects"></ul>
+    </main>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var DATA_URL = "project-data.json";
+        var NOT_PROVIDED = "Not provided";
+
+        // Field names from the project data schema (docs/project-pulse-plan.md §2.1).
+        var REQUIRED_FIELDS = ["name", "owner", "status", "recentActivity", "priority"];
+
+        var STATUS_LABELS = {
+          "on-track": "On track",
+          "at-risk": "At risk",
+          "blocked": "Blocked",
+          "completed": "Completed"
+        };
+
+        var PRIORITY_LABELS = {
+          "high": "High priority",
+          "medium": "Medium priority",
+          "low": "Low priority"
+        };
+
+        var dateFormatter = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", dateStyle: "medium" });
+
+        var messageElement = document.getElementById("dashboard-message");
+        var metaElement = document.getElementById("dashboard-meta");
+        var gridElement = document.getElementById("project-grid");
+
+        // ---------- Helpers ----------
+
+        function showMessage(text, variant) {
+          messageElement.classList.remove("dashboard__message--error", "dashboard__message--empty");
+          if (variant) {
+            messageElement.classList.add("dashboard__message--" + variant);
+          }
+          messageElement.textContent = text;
+          messageElement.hidden = false;
+        }
+
+        function hideMessage() {
+          messageElement.classList.remove("dashboard__message--error", "dashboard__message--empty");
+          messageElement.textContent = "";
+          messageElement.hidden = true;
+        }
+
+        function createElement(tagName, className, text) {
+          var element = document.createElement(tagName);
+          if (className) {
+            element.className = className;
+          }
+          if (text !== undefined && text !== null) {
+            element.textContent = text;
+          }
+          return element;
+        }
+
+        // Lowercase, trim and replace whitespace with hyphens: " At Risk " -> "at-risk".
+        function normalizeToken(value) {
+          if (typeof value !== "string") {
+            return "";
+          }
+          return value.trim().toLowerCase().replace(/\s+/g, "-");
+        }
+
+        function slugify(value) {
+          return String(value)
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "");
+        }
+
+        function isNonEmptyText(value) {
+          return (typeof value === "string" && value.trim() !== "") || (typeof value === "number" && isFinite(value));
+        }
+
+        // Returns a Date (UTC midnight) for a valid "YYYY-MM-DD" string, otherwise null.
+        function parseIsoDate(value) {
+          if (typeof value !== "string") {
+            return null;
+          }
+          var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+          if (!match) {
+            return null;
+          }
+          var year = Number(match[1]);
+          var month = Number(match[2]);
+          var day = Number(match[3]);
+          var date = new Date(Date.UTC(year, month - 1, day));
+          var isSameDay = date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+          return isSameDay ? date : null;
+        }
+
+        // Returns a <time> element for valid dates, or null when the value is not a valid date.
+        function createTimeElement(value, className) {
+          var date = parseIsoDate(value);
+          if (!date) {
+            return null;
+          }
+          var timeElement = createElement("time", className, dateFormatter.format(date));
+          timeElement.setAttribute("datetime", value.trim());
+          return timeElement;
+        }
+
+        // Returns an integer 0-100, or null if progress is missing or not a number.
+        function normalizeProgress(value) {
+          if (typeof value !== "number" || !isFinite(value)) {
+            return null;
+          }
+          return Math.round(Math.min(100, Math.max(0, value)));
+        }
+
+        // Validates required fields; missing ones become "Not provided" and are logged.
+        function readProject(rawProject, index) {
+          var source = rawProject !== null && typeof rawProject === "object" && !Array.isArray(rawProject) ? rawProject : {};
+          if (source !== rawProject) {
+            console.warn("Project Pulse: project at index " + index + " is not an object.", rawProject);
+          }
+
+          var project = {};
+          REQUIRED_FIELDS.forEach(function (field) {
+            if (isNonEmptyText(source[field])) {
+              project[field] = String(source[field]).trim();
+              project[field + "Missing"] = false;
+            } else {
+              console.warn("Project Pulse: project at index " + index + " is missing required field \"" + field + "\".");
+              project[field] = NOT_PROVIDED;
+              project[field + "Missing"] = true;
+            }
+          });
+
+          project.id = isNonEmptyText(source.id) ? slugify(source.id) : "";
+          project.summary = isNonEmptyText(source.summary) ? String(source.summary).trim() : "";
+          project.progress = normalizeProgress(source.progress);
+          project.dueDate = typeof source.dueDate === "string" ? source.dueDate.trim() : "";
+          return project;
+        }
+
+        // ---------- Rendering ----------
+
+        function renderMeta(lastUpdated, projectCount) {
+          while (metaElement.firstChild) {
+            metaElement.removeChild(metaElement.firstChild);
+          }
+          var countText = projectCount + (projectCount === 1 ? " project" : " projects");
+
+          if (typeof lastUpdated === "string" && lastUpdated.trim() !== "") {
+            metaElement.appendChild(document.createTextNode("Updated "));
+            var updatedTime = createTimeElement(lastUpdated, "");
+            metaElement.appendChild(updatedTime || document.createTextNode(lastUpdated.trim()));
+            metaElement.appendChild(document.createTextNode(" · " + countText));
+          } else {
+            metaElement.appendChild(document.createTextNode(countText));
+          }
+          metaElement.hidden = false;
+        }
+
+        function createStatusBadge(project) {
+          var statusKey = normalizeToken(project.status);
+          var isKnown = !project.statusMissing && Object.prototype.hasOwnProperty.call(STATUS_LABELS, statusKey);
+          var modifier = isKnown ? statusKey : "unknown";
+          var label = isKnown ? STATUS_LABELS[statusKey] : (project.statusMissing ? "Unknown" : project.status);
+          var badge = createElement("span", "status-badge status-badge--" + modifier, label);
+          return { element: badge, modifier: modifier };
+        }
+
+        function createPriorityBadge(project) {
+          var priorityKey = normalizeToken(project.priority);
+          var isKnown = !project.priorityMissing && Object.prototype.hasOwnProperty.call(PRIORITY_LABELS, priorityKey);
+          var modifier = isKnown ? priorityKey : "unknown";
+          var label = isKnown ? PRIORITY_LABELS[priorityKey] : (project.priorityMissing ? "Unknown priority" : project.priority + " priority");
+          var badge = createElement("span", "priority-badge priority-badge--" + modifier, label);
+          return { element: badge, modifier: modifier };
+        }
+
+        function createDetail(term, valueNode) {
+          var wrapper = createElement("div", "project-card__detail");
+          wrapper.appendChild(createElement("dt", "", term));
+          wrapper.appendChild(valueNode);
+          return wrapper;
+        }
+
+        function createDueDateValue(dueDate) {
+          var definition = createElement("dd");
+          if (dueDate === "") {
+            definition.appendChild(createElement("span", "project-card__due", "No due date"));
+            return definition;
+          }
+          var timeElement = createTimeElement(dueDate, "project-card__due");
+          // Invalid dates show the raw text instead of "Invalid Date".
+          definition.appendChild(timeElement || createElement("span", "project-card__due", dueDate));
+          return definition;
+        }
+
+        function createProjectCard(project, nameId) {
+          var status = createStatusBadge(project);
+          var priority = createPriorityBadge(project);
+
+          var card = createElement(
+            "article",
+            "project-card project-card--status-" + status.modifier + " project-card--priority-" + priority.modifier
+          );
+          card.setAttribute("aria-labelledby", nameId);
+
+          // Header: name and status badge.
+          var header = createElement("header", "project-card__header");
+          var nameHeading = createElement("h2", "project-card__name", project.name);
+          nameHeading.id = nameId;
+          header.appendChild(nameHeading);
+          header.appendChild(status.element);
+          card.appendChild(header);
+
+          // Optional summary.
+          if (project.summary !== "") {
+            card.appendChild(createElement("p", "project-card__summary", project.summary));
+          }
+
+          // Details: owner, priority, due date.
+          var details = createElement("dl", "project-card__details");
+          details.appendChild(createDetail("Owner", createElement("dd", "project-card__owner", project.owner)));
+          var priorityValue = createElement("dd");
+          priorityValue.appendChild(priority.element);
+          details.appendChild(createDetail("Priority", priorityValue));
+          details.appendChild(createDetail("Due", createDueDateValue(project.dueDate)));
+          card.appendChild(details);
+
+          // Optional progress bar (hidden when progress is missing or not a number).
+          if (project.progress !== null) {
+            var progress = createElement("div", "progress");
+            progress.setAttribute("role", "progressbar");
+            progress.setAttribute("aria-valuemin", "0");
+            progress.setAttribute("aria-valuemax", "100");
+            progress.setAttribute("aria-valuenow", String(project.progress));
+            progress.setAttribute("aria-label", project.name + " progress");
+            progress.style.setProperty("--progress", project.progress + "%");
+            progress.appendChild(createElement("span", "progress__bar"));
+            card.appendChild(progress);
+            card.appendChild(createElement("p", "progress__label", project.progress + "% complete"));
+          }
+
+          // Recent activity.
+          var activity = createElement("p", "project-card__activity");
+          activity.appendChild(createElement("span", "project-card__label", "Recent activity"));
+          activity.appendChild(document.createTextNode(" " + project.recentActivity));
+          card.appendChild(activity);
+
+          return card;
+        }
+
+        function renderProjects(rawProjects) {
+          while (gridElement.firstChild) {
+            gridElement.removeChild(gridElement.firstChild);
+          }
+          var usedIds = {};
+
+          rawProjects.forEach(function (rawProject, index) {
+            var project = readProject(rawProject, index);
+            var baseId = "project-" + (project.id || String(index));
+            var uniqueId = usedIds[baseId] ? baseId + "-" + index : baseId;
+            usedIds[uniqueId] = true;
+
+            var item = createElement("li", "project-grid__item");
+            item.appendChild(createProjectCard(project, uniqueId + "-name"));
+            gridElement.appendChild(item);
+          });
+        }
+
+        // ---------- Loading ----------
+
+        function loadDashboard() {
+          if (window.location.protocol === "file:") {
+            showMessage(
+              "Could not load project data (browsers block loading files from file:// pages). " +
+              "Start the \"Run Project Pulse Dashboard\" launch configuration in VS Code and open the page it serves.",
+              "error"
+            );
+            console.error("Project Pulse: page opened from file://, so fetch(\"" + DATA_URL + "\") is blocked.");
+            return;
+          }
+
+          showMessage("Loading projects…");
+
+          fetch(DATA_URL, { cache: "no-store" })
+            .then(function (response) {
+              if (!response.ok) {
+                throw new Error("HTTP " + response.status + " " + response.statusText + " for " + DATA_URL);
+              }
+              return response.json().catch(function (parseError) {
+                throw new Error(DATA_URL + " is not valid JSON: " + parseError.message);
+              });
+            })
+            .then(function (data) {
+              if (data === null || typeof data !== "object" || !Array.isArray(data.projects)) {
+                throw new Error(DATA_URL + " must contain a top-level \"projects\" array");
+              }
+
+              renderMeta(data.lastUpdated, data.projects.length);
+
+              if (data.projects.length === 0) {
+                renderProjects([]);
+                showMessage("No projects yet. Add a project to project-data.json to see it here.", "empty");
+                return;
+              }
+
+              renderProjects(data.projects);
+              hideMessage();
+            })
+            .catch(function (error) {
+              console.error("Project Pulse: could not load project data.", error);
+              var reason = error && error.message ? error.message : String(error);
+              showMessage("Could not load project data (" + reason + ").", "error");
+            });
+        }
+
+        loadDashboard();
+      })();
+    </script>
+  </body>
+</html>
